@@ -43,7 +43,7 @@ class ImageProcessing {
 		return instance;
 	}
 
-	public void beautySkin(Allocation mInAllocation) {
+	public void process(Allocation mInAllocation) {
 
 		this.mInAllocation = mInAllocation;
 		float inputData[] = new float[] { 1.f, 2.f, 3.f, 4.f };

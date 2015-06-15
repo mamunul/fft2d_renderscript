@@ -67,7 +67,7 @@ public class MainActivity extends Activity {
 
 		printBitmapPixelsFloat(outBitmap);
 
-		ImageProcessing.getInstance(this, rs, outBitmap).beautySkin(allocationIn1);
+		ImageProcessing.getInstance(this, rs, outBitmap).process(allocationIn1);
 
 	}
 

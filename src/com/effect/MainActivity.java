@@ -1,9 +1,11 @@
 package com.effect;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v8.renderscript.Allocation;
 import android.support.v8.renderscript.RenderScript;
@@ -12,7 +14,11 @@ import android.widget.ImageView;
 
 public class MainActivity extends Activity {
 
-	private ImageView imageView;
+	private ImageView inImageView, outImageView;
+	Bitmap outBitmap;
+	Allocation allocationIn1, allocationIn2;
+	RenderScript rs;
+	Context context;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -21,54 +27,85 @@ public class MainActivity extends Activity {
 
 		setContentView(R.layout.main_layout);
 
-		imageView = (ImageView) findViewById(R.id.imageview);
+		inImageView = (ImageView) findViewById(R.id.in_imageview);
 
-		imageView.setImageResource(R.drawable.image);
+		inImageView.setImageResource(R.drawable.image);
 
-		applyImageOverlay(null);
+		outImageView = (ImageView) findViewById(R.id.out_imageview);
+
+		outImageView.setImageResource(R.drawable.image);
+		context = this;
+
 	}
 
-	void applyImageOverlay(Allocation allocationIn2) {
-		
-		int N = 8;
-		int M = 8;
-		double[][] re2 = new double[N][M];
-		double[][] im2 = new double[N][M];
-		
-		for (int i = 0; i < N; i++) {
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
 
-			for (int j = 0; j < M; j++) {
+//		rs.finish();
+//		rs.destroy();
+//		//
+//		rs = null;
+//
+//		allocationIn1 = null;
+//		allocationIn2 = null;
+		ImageProcessing2.destroy();
+		super.onPause();
+	}
 
-				// re2[i][j] = i;
-				// im2[i][j] = 0;
+	protected void onResume() {
 
-				re2[i][j] = i + j;
-				im2[i][j] = 0;
+		super.onResume();
 
-//				System.out.print(" " + re2[i][j] + "+j" + im2[i][j]);
-			}
+		applyImageOverlay(null);
 
-//			System.out.println();
-		}
+	};
 
-		RenderScript rs = RenderScript.create(this);
-		Bitmap b1 = BitmapFactory.decodeResource(getResources(),
-				R.drawable.image);
-		Bitmap outBitmap = Bitmap.createScaledBitmap(b1, 8, 8, false);
+	void applyImageOverlay(Allocation allo) {
 
-		imageView.setImageBitmap(outBitmap);
+		rs = RenderScript.create(context);
+		Bitmap b1 = BitmapFactory.decodeResource(getResources(), R.drawable.e);
+
+		int imageSize = 512;
+
+		Bitmap b2 = Bitmap.createScaledBitmap(b1, imageSize, imageSize, false);
+
+		outBitmap = Bitmap.createScaledBitmap(b1, imageSize, imageSize, false);
+
+		inImageView.setImageBitmap(b2);
 
 		Log.i("image", "w: " + b1.getWidth() + " h: " + b1.getHeight());
 
-		Allocation allocationIn1 = Allocation.createFromBitmap(rs, outBitmap,
+		allocationIn1 = Allocation.createFromBitmap(rs, outBitmap,
 				Allocation.MipmapControl.MIPMAP_NONE, 1);
 
-		printBitmapPixelsHex(outBitmap);
+		allocationIn2 = Allocation.createFromBitmap(rs, b2,
+				Allocation.MipmapControl.MIPMAP_NONE, 1);
 
-		printBitmapPixelsFloat(outBitmap);
+		// printBitmapPixelsHex(outBitmap);
 
-		ImageProcessing.getInstance(this, rs, outBitmap).process(allocationIn1);
+		// printBitmapPixelsFloat(outBitmap);\
 
+		new AsyncTask<String, Integer, Boolean>() {
+
+			@Override
+			protected Boolean doInBackground(String... params) {
+				// TODO Auto-generated method stub
+
+				ImageProcessing2.getInstance(context, rs, outBitmap)
+						.process(allocationIn1, allocationIn2);
+				return null;
+			}
+
+			@Override
+			protected void onPostExecute(Boolean result) {
+				// TODO Auto-generated method stub
+				super.onPostExecute(result);
+				outImageView.setImageBitmap(outBitmap);
+//				
+			}
+		}.execute();
+	
 	}
 
 	void printBitmapPixelsHex(Bitmap bitmap) {
@@ -103,16 +140,14 @@ public class MainActivity extends Activity {
 
 		for (int i = 0; i < bitmap.getWidth(); i++) {
 			System.out.println("row" + i);
+			System.out.println("{");
 			for (int j = 0; j < bitmap.getHeight(); j++) {
 
-				System.out.println(" "
-						+ (float) Color.red(bitmap.getPixel(i, j)) / 255 + ":"
-						+ (float) Color.green(bitmap.getPixel(i, j)) / 255
-						+ ":" + (float) Color.blue(bitmap.getPixel(i, j)) / 255
-						+ " ");
+				System.out.print(" " + (float) Color.red(bitmap.getPixel(i, j))
+						/ 255 + ",");
 
 			}
-
+			System.out.println("}");
 			System.out.println("\n");
 		}
 

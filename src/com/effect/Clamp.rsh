@@ -26,7 +26,7 @@ static inline float FClamp01Float(const float d) {
     return FClampFloat(d, 0.0f, 1.0f);
 }
 
-static inline float3 FClamp01Float3(const float3 t) {
+static inline float4 FClamp01Float4(const float4 t) {
     t.r = FClampFloat(t.r, 0.0f, 1.0f);
     t.g = FClampFloat(t.g, 0.0f, 1.0f);
     t.b = FClampFloat(t.b, 0.0f, 1.0f);
